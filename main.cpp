@@ -1,137 +1,49 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
+
+const int MAX_CITY_LENGTH = 30;
 
 struct Element
 {
-    Element* prev;
-    int data;
+    char data [MAX_CITY_LENGTH];
     Element* next;
 };
 struct Queue
 {
-    Element* head = NULL, * tail = NULL;
+    Element* head = nullptr, *tail = nullptr;
 };
-void pusht(Queue& q, int d)
+void push(Queue& q, char*s)
 {
     Element* e = (Element*)malloc(sizeof(Element));
-    e->data = d;
-    e->next = NULL;
-    e->prev = q.tail;
+    strcpy(e->data,s);
+    e->next = nullptr;
 
-    if (q.head == NULL)
+    if (q.head == nullptr)
     {
         q.tail = e;
         q.head = e;
     }
-
-    else
-    {
+    else {
         q.tail->next = e;
         q.tail = e;
     }
 }
-void pushh(Queue& q, int d)
+int find(Queue &q, char* n)
 {
-    Element* e = (Element*)malloc(sizeof(Element));
-    e->data = d;
-    e->next = q.head;
-    e->prev = NULL;
-
-    if (q.tail == NULL)
+    int counter = 0;
+    Element* cur = nullptr;
+    for (cur = q.head; cur != nullptr; cur = cur->next)
     {
-        q.tail = e;
-        q.head = e;
-    }
-
-    else
-    {
-        q.head->prev = e;
-        q.head = e;
-    }
-}
-void pullh(Queue& q)
-{
-    if (q.head == q.tail)
-    {
-        q.tail = NULL;
-    }
-
-    Element* e = q.head;
-    q.head = q.head->next;
-    q.head->prev = NULL;
-    free(e);
-}
-void pullt(Queue& q)
-{
-    if (q.head == q.tail)
-    {
-        q.tail = NULL;
-    }
-
-    Element* e = q.tail;
-    q.head = q.head->next;
-    q.head->prev = NULL;
-    free(e);
-}
-void printh(Queue& q)
-{
-    for (Element* cur = q.head; cur != NULL; cur = cur->next)
-    {
-        printf("%4i", cur->data);
-    }
-    printf("\n");
-}
-void printt(Queue& q)
-{
-    for (Element* cur = q.tail; cur != NULL; cur = cur->prev)
-    {
-        printf("%4i", cur->data);
-    }
-    printf("\n");
-}
-int count(Queue& q)
-{
-    int a = 0;
-    for (Element* cur = q.head; cur != NULL; cur = cur->next)
-    {
-        a++;
-    }
-    return a;
-}
-Element* find(Queue& q, int n)
-{
-    Element* cur = NULL;
-    for (cur = q.head; cur != NULL; cur = cur->next)
-    {
-        if (cur->data == n)
+        counter++;
+        if (strcmp(cur->data, n) == 0)
         {
-            return cur;
+            printf("City was found!\n");
+            return counter;
         }
     }
-}
-void kill(Queue& q, Element* dead)
-{
-    if (q.tail == q.head)
-    {
-        q.tail->data = NULL;
-    }
-
-    else if (q.head == dead)
-    {
-        Element* e = q.head;
-        q.head = q.head->next;
-        free(e);
-    }
-
-    for (Element* cur = q.head; cur != NULL; cur = cur->next)
-    {
-        if ((cur->next) == dead)
-        {
-            dead->data = 0;
-            cur->next = dead->next;
-            free(dead);
-        }
-    }
+    printf("City wasn't found!\n");
+    return counter;
 }
 int hashCode(char* cityName, int hashSize) {
     int hash = 0;
@@ -141,20 +53,36 @@ int hashCode(char* cityName, int hashSize) {
     hash = hash%hashSize;
     return hash;
 }
+double HashTableCoef(Queue* hashTable, int hashSize) {
+    double full = 0;
+    for (int i = 0; i<hashSize; i++) {
+        if (hashTable[i].head != nullptr) {
+            full+=1.0;
+        }
+    }
+    return full/hashSize;
+}
 
 int main() {
     int hashSize = 17;
     char cityName[30];
-    for (int i = 0; i < 5; i++) {
-        printf("Input city name: ");
-        scanf("%s", cityName);
-        int res = hashCode(cityName, hashSize);
-        printf("%d\n", res);
+    struct Queue hashTable[hashSize];
+
+    FILE * f = fopen(R"(C:\Users\vinar\CLionProjects\HashTable\cities.txt)","r");
+    if(!f)
+        printf("Error!\n");
+    else {
+        while (fscanf(f, " %30s", cityName) == 1) {
+            push(hashTable[hashCode(cityName, hashSize)], cityName);
+        }
     }
-    Element* hashTable;
-    hashTable = (Element*)malloc(hashSize * sizeof(Element*));
-    
-    free(hashTable);
+    fclose(f);
 
-
+    printf("Input your city to find: ");
+    scanf("%s", cityName);
+    int d = find(hashTable[hashCode(cityName, hashSize)], cityName);
+    printf("Number of elements: %d\n", d);
+    printf("HashTable Coefficient: %.2f", HashTableCoef(hashTable, hashSize));
+    return 0;
 }
+
